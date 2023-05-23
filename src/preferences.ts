@@ -70,6 +70,10 @@ export const getDefaultLangPref = (): string | null => {
     return pref;
 };
 
+export const getFileNamingConventionPref = (): string => {
+    return getPreference('general.defaultFileNamingConvention');
+};
+
 export const useShortCodeForcesName = (): boolean => {
     return getPreference('general.useShortCodeForcesName');
 };

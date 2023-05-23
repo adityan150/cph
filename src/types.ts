@@ -2,6 +2,7 @@
 export type prefSection =
     | 'general.saveLocation'
     | 'general.defaultLanguage'
+    | 'general.defaultFileNamingConvention'
     | 'general.timeOut'
     | 'general.ignoreSTDERROR'
     | 'general.firstTime'

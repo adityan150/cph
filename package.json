@@ -285,10 +285,12 @@
         "ts-loader": "^7.0.5",
         "typescript": "^3.8.3",
         "vscode-codicons": "^0.0.17",
-        "webpack": "^4.43.0",
+        "webpack": "^5.83.1",
         "webpack-cli": "^3.3.11"
     },
     "dependencies": {
+        "chokidar": "^3.5.3",
+        "glob-parent": "^5.1.2",
         "python-shell": "^2.0.2",
         "react": "^16.13.1",
         "react-autosize-textarea": "^7.0.0",
