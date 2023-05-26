@@ -4,10 +4,11 @@ import { Problem, CphSubmitResponse, CphEmptyResponse } from './types';
 import { saveProblem } from './parser';
 import * as vscode from 'vscode';
 import path from 'path';
-import { writeFileSync, readFileSync, existsSync } from 'fs';
+import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
 import { isCodeforcesUrl, randomId } from './utils';
 import {
     getDefaultLangPref,
+    getFileNamingConventionPref,
     getLanguageId,
     useShortCodeForcesName,
     getMenuChoices,
@@ -147,12 +148,116 @@ export const getProblemFileName = (problem: Problem, ext: string) => {
             useShortCodeForcesName(),
         );
 
+        // Following naming convention
+        let separator = '_';
+        if (getFileNamingConventionPref() === 'snake_case') {
+            separator = '_';
+        } else if (getFileNamingConventionPref() === 'kebab-case') {
+            separator = '-';
+        } else if (getFileNamingConventionPref() === 'camelCase') {
+            separator = '';
+        }
+
         const words = words_in_text(problem.name);
         if (words === null) {
-            return `${problem.name.replace(/\W+/g, '_')}.${ext}`;
+            return `${problem.name.replace(/\W+/g, separator)}.${ext}`;
         } else {
-            return `${words.join('_')}.${ext}`;
+            return `${words.join(separator)}.${ext}`;
         }
+    }
+};
+
+export const getProblemFolderName = (problem: Problem) => {
+    const url = problem.url;
+    const lowercaseUrl = url.toLowerCase();
+
+    switch (true) {
+        case lowercaseUrl.includes('codeforces'):
+            return 'CodeForces';
+        case lowercaseUrl.includes('codechef'):
+            return 'CodeChef';
+        case lowercaseUrl.includes('atcoder'):
+            return 'AtCoder';
+        case lowercaseUrl.includes('baekjoon'):
+            return 'Baekjoon Online Judge';
+        case lowercaseUrl.includes('toph'):
+            return 'Toph';
+        case lowercaseUrl.includes('hackerearth'):
+            return 'HackerEarth';
+        case lowercaseUrl.includes('hackerrank'):
+            return 'HackerRank';
+        case lowercaseUrl.includes('spoj'):
+            return 'SPOJ';
+        case lowercaseUrl.includes('uva online judge'):
+            return 'UVa Online Judge';
+        case lowercaseUrl.includes('acmp'):
+            return 'ACMP';
+        case lowercaseUrl.includes('acwing'):
+            return 'AcWing';
+        case lowercaseUrl.includes('aizu online judge'):
+            return 'Aizu Online Judge';
+        case lowercaseUrl.includes('anarchy golf'):
+            return 'Anarchy Golf';
+        case lowercaseUrl.includes('bloomberg codecon'):
+            return 'Bloomberg CodeCon';
+        case lowercaseUrl.includes('buctoj'):
+            return 'BUCTOJ';
+        case lowercaseUrl.includes('codedrills'):
+            return 'CodeDrills';
+        case lowercaseUrl.includes('codemarshal'):
+            return 'CodeMarshal';
+        case lowercaseUrl.includes('coj'):
+            return 'COJ';
+        case lowercaseUrl.includes('contest hunter'):
+            return 'Contest Hunter';
+        case lowercaseUrl.includes('cs academy'):
+            return 'CS Academy';
+        case lowercaseUrl.includes('cses'):
+            return 'CSES';
+        case lowercaseUrl.includes('csu-acm online judge'):
+            return 'CSU-ACM Online Judge';
+        case lowercaseUrl.includes('dmoj'):
+            return 'DMOJ';
+        case lowercaseUrl.includes('eolymp'):
+            return 'Eolymp';
+        case lowercaseUrl.includes('ecnu online judge'):
+            return 'ECNU Online Judge';
+        case lowercaseUrl.includes('fzu online judge'):
+            return 'FZU Online Judge';
+        case lowercaseUrl.includes('google coding competitions'):
+            return 'Google Coding Competitions';
+        case lowercaseUrl.includes('hdoj'):
+            return 'HDOJ';
+        case lowercaseUrl.includes('hit online judge'):
+            return 'HIT Online Judge';
+        case lowercaseUrl.includes('hihocoder'):
+            return 'hihoCoder';
+        case lowercaseUrl.includes('hkoi online judge'):
+            return 'HKOI Online Judge';
+        case lowercaseUrl.includes('hrbust online judge'):
+            return 'Hrbust Online Judge';
+        case lowercaseUrl.includes('hydro'):
+            return 'Hydro';
+        case lowercaseUrl.includes('icpc live archive'):
+            return 'ICPC Live Archive';
+        case lowercaseUrl.includes('jutge'):
+            return 'Jutge';
+        case lowercaseUrl.includes('kattis'):
+            return 'Kattis';
+        case lowercaseUrl.includes('library checker'):
+            return 'Library Checker';
+        case lowercaseUrl.includes('libreoj'):
+            return 'LibreOJ';
+        case lowercaseUrl.includes('lightoj'):
+            return 'LightOJ';
+        case lowercaseUrl.includes('lsyoi'):
+            return 'LSYOI';
+        case lowercaseUrl.includes('luogu'):
+            return 'Luogu';
+        case lowercaseUrl.includes('meta coding competitions'):
+            return 'Meta Coding Competitions';
+        default:
+            return 'Other';
     }
 };
 
@@ -165,7 +270,8 @@ const handleNewProblem = async (problem: Problem) => {
             problem: undefined,
         });
     }
-    const folder = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
+
+    let folder = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
     if (folder === undefined) {
         vscode.window.showInformationMessage('Please open a folder first.');
         return;
@@ -201,7 +307,13 @@ const handleNewProblem = async (problem: Problem) => {
         const splitUrl = problem.url.split('/');
         problem.name = splitUrl[splitUrl.length - 1];
     }
+
+    const subFolder = getProblemFolderName(problem);
     const problemFileName = getProblemFileName(problem, extn);
+    folder = path.join(folder, subFolder);
+    if (!existsSync(folder)) {
+        mkdirSync(folder);
+    }
     const srcPath = path.join(folder, problemFileName);
 
     // Add fields absent in competitive companion.
